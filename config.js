@@ -2,6 +2,8 @@ module.exports = {
   prefix: "!",
   phoneNumber: "91XXXXXXXXXX",
   sudo: ["91XXXXXXXXXX@s.whatsapp.net"],
+  defaultGroup: "1203630xxxxx@g.us", // set your main group ID
+  allowLinks: false,
 
   menus: {
     main: `📜 BOT MENU
