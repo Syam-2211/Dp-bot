@@ -1,8 +1,10 @@
 const { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys')
 const P = require('pino')
 const http = require('http')
+const db = require('./database')
+const config = require('./config')
 
-// Tiny HTTP server to keep Render/Railway happy
+// Tiny HTTP server for Render/Railway
 const PORT = process.env.PORT || 3000
 http.createServer((_, res) => { res.writeHead(200); res.end('Bot is running'); }).listen(PORT)
 
@@ -14,15 +16,15 @@ async function startBot() {
     version,
     auth: state,
     logger: P({ level: 'info' }),
-    printQRInTerminal: false // disable QR
+    printQRInTerminal: false
   })
 
-  // Pairing code login (first time only)
+  // Pairing code login
   if (!sock.authState.creds.registered) {
-    const phoneNumber = process.env.PHONE_NUMBER || "91XXXXXXXXXX" // set your number in env
+    const phoneNumber = process.env.PHONE_NUMBER || config.phoneNumber
     const code = await sock.requestPairingCode(phoneNumber)
     console.log("🔑 Pairing code:", code)
-    console.log("👉 On WhatsApp: Settings → Linked Devices → Link with code → enter this code")
+    console.log("👉 WhatsApp → Settings → Linked Devices → Link with code")
   }
 
   sock.ev.on('creds.update', saveCreds)
@@ -33,63 +35,49 @@ async function startBot() {
     if (!m.message) return
     const text = m.message.conversation || m.message.extendedTextMessage?.text || ''
     const chatId = m.key.remoteJid
+    const sender = m.key.participant || m.key.remoteJid
 
-    if (!text.startsWith('!')) return
-    const [cmd, ...args] = text.trim().slice(1).split(/\s+/)
+    if (!text.startsWith(config.prefix)) return
+    const [cmd, ...args] = text.trim().slice(config.prefix.length).split(/\s+/)
 
+    // Menus
     if (cmd === 'menu') {
-      await sock.sendMessage(chatId, { text:
-`📜 BOT MENU
-──────────────
-💼 Business Tools
-• !catalog        → Show product catalog
-• !status <id>    → Track order status
-• !remind <time> <text> → Set reminders
-• Multi-language replies (EN/ML)
-
-🎉 Fun & Social
-• !joke • !quote • !quiz • !rps • !dice • !meme
-• Greetings → Auto reply to “good morning” / “good night”
-
-🧠 Productivity
-• !weather <city> • !news <topic> • !define <word>
-• !translate <lang> <text> • !note <text> • !task add/list • !convert <amt> <from> <to>
-
-👥 Group Management
-• Welcome messages • Anti-spam • Anti-link • !poll "Q" opt1 opt2`
-      })
+      return sock.sendMessage(chatId, { text: config.menus.main })
+    }
+    if (cmd === 'media') {
+      return sock.sendMessage(chatId, { text: config.menus.media })
+    }
+    if (cmd === 'admin') {
+      return sock.sendMessage(chatId, { text: config.menus.admin })
     }
 
-    else if (cmd === 'media') {
-      await sock.sendMessage(chatId, { text:
-`📥 MEDIA MENU
-──────────────
-📎 WhatsApp Media
-• !download image/video/audio/doc
-
-🌐 Social Media Links
-• !download <YouTube|Instagram|Facebook|Twitter|TikTok URL>`
-      })
+    // Admin commands (sudo only)
+    if (config.sudo.includes(sender)) {
+      if (cmd === 'shutdown') process.exit()
+      if (cmd === 'restart') process.exit(1)
+      if (cmd === 'broadcast') {
+        const msg = args.join(' ')
+        const chats = await sock.groupFetchAllParticipating()
+        for (let id in chats) {
+          await sock.sendMessage(id, { text: msg })
+        }
+      }
+      if (cmd === 'ban') {
+        db.addBan(args[0])
+        await sock.sendMessage(chatId, { text: `User ${args[0]} banned ✅` })
+      }
+      if (cmd === 'unban') {
+        db.removeBan(args[0])
+        await sock.sendMessage(chatId, { text: `User ${args[0]} unbanned ✅` })
+      }
     }
 
-    else if (cmd === 'admin') {
-      await sock.sendMessage(chatId, { text:
-`🔧 ADMIN MENU
-──────────────
-🛡️ Mode Control
-• !mode private → Bot replies only to sudo users
-• !mode public  → Bot replies to everyone
+    // Fun commands
+    if (cmd === 'joke') return sock.sendMessage(chatId, { text: "😂 Here's a random joke!" })
+    if (cmd === 'quote') return sock.sendMessage(chatId, { text: "💡 Stay motivated, Syam!" })
 
-🧰 Admin Commands
-• !sudo • !shutdown • !restart • !broadcast <msg>
-• !ban <jid> • !unban <jid> • !mute • !unmute
-• !reload • !stats • !eval <code>`
-      })
-    }
-
-    else if (cmd === 'ping') {
-      await sock.sendMessage(chatId, { text: 'pong 🏓' })
-    }
+    // Utility commands
+    if (cmd === 'ping') return sock.sendMessage(chatId, { text: 'pong 🏓' })
   })
 }
 
