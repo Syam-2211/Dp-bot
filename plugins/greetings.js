@@ -1,27 +1,29 @@
-module.exports = (sock, config, db) => {
-  // Scheduled greetings
-  setInterval(async () => {
-    const hour = new Date().getHours()
-    if (hour === 8) {
-      await sock.sendMessage(config.defaultGroup, { text: "🌞 Good morning everyone!" })
-    }
-    if (hour === 22) {
-      await sock.sendMessage(config.defaultGroup, { text: "🌙 Good night, sleep well!" })
-    }
-  }, 60 * 60 * 1000)
+const { withSignature } = require('../utils/signature')
 
-  // Keyword triggers
+module.exports = (sock, config, db) => {
   sock.ev.on('messages.upsert', async ({ messages }) => {
     const m = messages[0]
     if (!m.message) return
-    const text = m.message.conversation || m.message.extendedTextMessage?.text || ''
     const chatId = m.key.remoteJid
+    const text = m.message.conversation || m.message.extendedTextMessage?.text || ''
+    const cmd = text.trim().toLowerCase()
+    const sender = m.key.participant || m.key.remoteJid
 
-    if (/help/i.test(text)) {
-      await sock.sendMessage(chatId, { text: "🤝 Type !menu to see all commands." })
-    }
-    if (/catalog/i.test(text)) {
-      await sock.sendMessage(chatId, { text: "🛍️ Use !catalog to view our products." })
+    if (cmd === `${config.prefix}menu`) {
+      const menu = `📜 ${config.botName} MENU
+──────────────
+💼 Business Tools
+• ${config.prefix}catalog • ${config.prefix}status <id> • ${config.prefix}remind <time> <text>
+🎉 Fun & Social
+• ${config.prefix}joke • ${config.prefix}quote • ${config.prefix}quiz • ${config.prefix}rps • ${config.prefix}dice • ${config.prefix}meme
+🧠 Productivity
+• ${config.prefix}weather • ${config.prefix}news • ${config.prefix}define • ${config.prefix}translate • ${config.prefix}note • ${config.prefix}task • ${config.prefix}convert
+👥 Group Management
+• Welcome • Anti-spam • Anti-link • ${config.prefix}poll "Q" opt1 opt2
+📦 Repo & Script
+• ${config.prefix}repo • ${config.prefix}sc • ${config.prefix}script`
+
+      await sock.sendMessage(chatId, { text: withSignature(menu, sender) })
     }
   })
 }
