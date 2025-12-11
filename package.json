@@ -7,10 +7,10 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "@hapi/boom": "^9.1.4",
-    "@whiskeysockets/baileys": "^6.6.0",
-    "fs": "^0.0.1-security"
-  },
+  "@hapi/boom": "^9.1.4",
+  "@whiskeysockets/baileys": "^6.6.0"
+}
+ },
   "engines": {
     "node": ">=18.0.0"
   }
