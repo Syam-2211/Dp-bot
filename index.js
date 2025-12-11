@@ -1,4 +1,9 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require("@whiskeysockets/baileys");
+const {
+  default: makeWASocket,
+  useMultiFileAuthState,
+  DisconnectReason
+} = require("@whiskeysockets/baileys");
+
 const fs = require("fs");
 const path = require("path");
 const send = require("./utils/send");
@@ -11,16 +16,18 @@ async function startBot() {
 
   const sock = makeWASocket({
     auth: state,
-    printQRInTerminal: true,
     browser: ["Ubuntu", "Chrome", "22.04.64"]
   });
 
   sock.ev.on("creds.update", saveCreds);
 
+  // Connection updates
   sock.ev.on("connection.update", (update) => {
     const { connection, lastDisconnect, qr } = update;
 
-    if (qr) console.log("🔗 Pairing Code:", qr);
+    if (qr) {
+      console.log("🔗 Pairing Code:", qr);
+    }
 
     if (connection === "close") {
       const reason = lastDisconnect?.error?.output?.statusCode;
@@ -53,8 +60,12 @@ async function startBot() {
     const msg = messages[0];
     if (!msg.message || msg.key.fromMe) return;
 
-    const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
-    if (!text || !text.startsWith(PREFIX)) return;
+    const text =
+      msg.message.conversation ||
+      msg.message.extendedTextMessage?.text ||
+      "";
+
+    if (!text.startsWith(PREFIX)) return;
 
     const args = text.slice(PREFIX.length).trim().split(/ +/);
     const command = args.shift().toLowerCase();
@@ -64,7 +75,9 @@ async function startBot() {
         await plugins[command].execute(sock, msg, args);
       } catch (err) {
         console.error(`❌ Error in ${command}:`, err);
-        await send(sock, msg.key.remoteJid, { text: `❌ Error: ${err.message}` });
+        await send(sock, msg.key.remoteJid, {
+          text: `❌ Error: ${err.message}`
+        });
       }
     }
   });
