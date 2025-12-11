@@ -1,8 +1,6 @@
 const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
-const { Boom } = require('@hapi/boom');
 const fs = require('fs');
 
-// Plugin loader
 function loadPlugins() {
   const pluginDir = './plugins';
   if (!fs.existsSync(pluginDir)) {
@@ -22,25 +20,24 @@ async function startBot() {
 
   const sock = makeWASocket({
     auth: state,
-    // printQRInTerminal is deprecated — use connection.update instead
+    // Force pairing code instead of QR
+    printQRInTerminal: false,
+    mobile: { // mobile mode triggers pairing code
+      client: 'android',
+      version: [2, 2407, 3]
+    }
   });
 
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect, qr, pairingCode } = update;
-
-    if (qr) {
-      console.log('📲 Scan this QR to link WhatsApp:\n', qr);
-    }
+    const { connection, lastDisconnect, pairingCode } = update;
 
     if (pairingCode) {
       console.log('🔗 Pairing Code:', pairingCode);
     }
 
-    const shouldReconnect = Boom.isBoom(lastDisconnect?.error)
-      ? lastDisconnect.error.output.statusCode !== 401
-      : true;
+    const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== 401;
 
     if (connection === 'close') {
       console.log('Connection closed. Reconnecting:', shouldReconnect);
@@ -53,7 +50,6 @@ async function startBot() {
 
   sock.ev.on('messages.upsert', async (m) => {
     console.log('📩 New message:', JSON.stringify(m, null, 2));
-    // You can handle commands here later
   });
 }
 
