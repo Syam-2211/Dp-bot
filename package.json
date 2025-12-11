@@ -1,5 +1,5 @@
 {
-  "name": "dj-bot",
+  "name": "dp-bot",
   "version": "1.0.0",
   "description": "WhatsApp bot using Baileys with plugin system and watermarking",
   "main": "index.js",
