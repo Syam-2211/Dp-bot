@@ -1,12 +1,16 @@
 {
-  "name": "whatsapp-bot",
-  "version": "1.0.0",
+  "name": "ultra-bot",
+  "version": "5.0.0",
+  "description": "🕊🦋⃝♥⃝ѕиєнα🍁♥⃝🦋⃝🕊 - Hybrid WhatsApp bot: fun + automation ",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.5",
-    "pino": "^8.0.0"
+    "@whiskeysockets/baileys": "^6.7.7",
+    "pino": "^9.0.0",
+    "dotenv": "^16.4.0",
+    "fs-extra": "^11.2.0"
   }
 }
