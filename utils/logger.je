@@ -1,0 +1,5 @@
+function log(scope, msg) {
+  const time = new Date().toISOString()
+  console.log(`[${time}] [${scope}] ${msg}`)
+}
+module.exports = { log }
