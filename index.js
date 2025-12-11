@@ -1,5 +1,6 @@
 const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
 const fs = require('fs');
+const send = require('./utils/send'); // global watermark wrapper
 
 // Plugin loader
 function loadPlugins() {
@@ -44,9 +45,25 @@ async function startBot() {
     }
   });
 
-  sock.ev.on('messages.upsert', async (m) => {
-    console.log('📩 New message:', JSON.stringify(m, null, 2));
-    // Command handling goes here
+  sock.ev.on('messages.upsert', async ({ messages }) => {
+    const msg = messages[0];
+    if (!msg.message) return;
+
+    const body = msg.message.conversation || msg.message.extendedTextMessage?.text || "";
+    const prefix = process.env.PREFIX || "!";
+    
+    if (!body.startsWith(prefix)) return;
+
+    const args = body.slice(prefix.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    try {
+      const plugin = require(`./plugins/${command}.js`);
+      plugin.execute(sock, msg, args);
+    } catch (e) {
+      console.log(`❌ Command not found: ${command}`);
+      await send(sock, msg.key.remoteJid, { text: `Unknown command: ${command}` });
+    }
   });
 }
 
