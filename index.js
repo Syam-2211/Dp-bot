@@ -1,6 +1,7 @@
 const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
 const fs = require('fs');
 
+// Plugin loader
 function loadPlugins() {
   const pluginDir = './plugins';
   if (!fs.existsSync(pluginDir)) {
@@ -20,12 +21,7 @@ async function startBot() {
 
   const sock = makeWASocket({
     auth: state,
-    // Force pairing code instead of QR
-    printQRInTerminal: false,
-    mobile: { // mobile mode triggers pairing code
-      client: 'android',
-      version: [2, 2407, 3]
-    }
+    printQRInTerminal: false // disables QR output
   });
 
   sock.ev.on('creds.update', saveCreds);
@@ -50,6 +46,7 @@ async function startBot() {
 
   sock.ev.on('messages.upsert', async (m) => {
     console.log('📩 New message:', JSON.stringify(m, null, 2));
+    // Command handling goes here
   });
 }
 
