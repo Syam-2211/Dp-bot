@@ -1,44 +1,53 @@
-const chalk = require('chalk')
-const config = require('./config')
-const db = require('./database')
+// Import Baileys
+const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
+const { Boom } = require('@hapi/boom');
+const fs = require('fs');
 
-function logWithBrand(message, success = true) {
-  const now = new Date()
-  const time = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  const brand = `🕊🦋⃝♥⃝ѕиєнα🍁♥⃝🦋⃝🕊`
-  const prefix = success ? chalk.green('✅') : chalk.red('❌')
-  console.log(`${prefix} ${brand} | ${time} | ${message}`)
+// Plugin loader (example: load all files in ./plugins)
+function loadPlugins() {
+  const pluginDir = './plugins';
+  if (!fs.existsSync(pluginDir)) {
+    console.log('⚠️ No plugins folder found');
+    return 0;
+  }
+  const files = fs.readdirSync(pluginDir).filter(f => f.endsWith('.js'));
+  files.forEach(file => {
+    require(`${pluginDir}/${file}`);
+  });
+  console.log(`✅ Loaded ${files.length} plugins successfully`);
+  return files.length;
 }
 
-function loadPlugins(sock) {
-  const plugins = [
-    './plugins/alive',
-    './plugins/info',
-    './plugins/repo',
-    './plugins/sticker',
-    './plugins/convertVoice',
-    './plugins/ping',
-    './plugins/mention',
-    './plugins/greetings',
+async function startBot() {
+  const { state, saveCreds } = await useMultiFileAuthState('./auth');
 
-    // New implementations
-    './plugins/admin',     // Admin commands
-    './plugins/convert',   // Convert commands
-    './plugins/search',    // Search commands
-    './plugins/ai',        // AI commands
-    './plugins/download',  // Download commands
-    './plugins/group'      // Group management
-  ]
+  const sock = makeWASocket({
+    auth: state,
+    printQRInTerminal: true, // shows QR in Render logs
+  });
 
-  plugins.forEach(path => {
-    try {
-      require(path)(sock, config, db)
-      logWithBrand(`Loaded plugin: ${path}`, true)
-    } catch (err) {
-      logWithBrand(`Failed to load plugin: ${path}`, false)
-      console.error(err)
+  sock.ev.on('creds.update', saveCreds);
+
+  sock.ev.on('connection.update', (update) => {
+    const { connection, lastDisconnect } = update;
+    if (connection === 'close') {
+      const shouldReconnect = (lastDisconnect.error = Boom)?.output?.statusCode !== 401;
+      console.log('Connection closed. Reconnecting:', shouldReconnect);
+      if (shouldReconnect) startBot();
+    } else if (connection === 'open') {
+      console.log('✅ WhatsApp connection established');
+      loadPlugins();
     }
-  })
+  });
+
+  sock.ev.on('messages.upsert', async (m) => {
+    console.log('📩 New message:', JSON.stringify(m, null, 2));
+    // Here you can handle commands, watermark replies, etc.
+  });
 }
 
-module.exports = { loadPlugins }
+// Start bot
+startBot();
+
+// Prevent early exit
+setInterval(() => {}, 1000);
