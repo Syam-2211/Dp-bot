@@ -1,35 +1,20 @@
 module.exports = {
   prefix: "!",
-  phoneNumber: "91XXXXXXXXXX",
-  sudo: ["91XXXXXXXXXX@s.whatsapp.net"],
-  defaultGroup: "1203630xxxxx@g.us", // set your main group ID
-  allowLinks: false,
+  sudo: ["919947121619@s.whatsapp.net"], // add more JIDs if needed
+  phoneNumber: "919947121619",
+  repoUrl: "http://instagram.com/_mr.fro_ud_",
 
-  menus: {
-    main: `📜 BOT MENU
-──────────────
-💼 Business Tools
-• !catalog • !status <id> • !remind <time> <text>
-🎉 Fun & Social
-• !joke • !quote • !quiz • !rps • !dice • !meme
-🧠 Productivity
-• !weather • !news • !define • !translate • !note • !task • !convert
-👥 Group Management
-• Welcome • Anti-spam • Anti-link • !poll "Q" opt1 opt2`,
+  botName: "🕊🦋⃝♥⃝ѕиєнα🍁♥⃝🦋⃝🕊",
 
-    media: `📥 MEDIA MENU
-──────────────
-📎 WhatsApp Media
-• !download image/video/audio/doc
-🌐 Social Media Links
-• !download <YouTube|Instagram|Facebook|Twitter|TikTok URL>`,
+  // Global signature with dynamic {user}
+  signature: `🤍⃞𝄟ꪶ𝐒͢ʏ᪳ᴀ͓ᴍ͎ ͢𝐒ᴇ͓ꪳʀ͎𖦻⃞🍓
 
-    admin: `🔧 ADMIN MENU
-──────────────
-🛡️ Mode Control
-• !mode private • !mode public
-🧰 Admin Commands
-• !sudo • !shutdown • !restart • !broadcast <msg>
-• !ban • !unban • !mute • !unmute • !reload • !stats • !eval`
-  }
+    𝛨𝛯𝐿𝐿𝛩 𝐵𝛩𝐵𝛩
+
+            >𝟑💌🕊🦋🍒
+
+           🪡⇉ꪶ +91 99471 21619 ⃟⃮➣🤍
+           Hey youhh  {user}
+
+🕊🦋⃝♥⃝ѕиєнα🍁♥⃝🦋⃝🕊 🔗🤍⃞𝄟ꪶ𝐒͢ʏ᪳ᴀ͓ᴍ͎ ͢𝐒ᴇ͓ꪳʀ͎𖦻⃞🍓`
 }
