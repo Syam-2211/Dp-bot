@@ -26,5 +26,13 @@ module.exports = (sock, config, db) => {
       const data = db.get('stats') || { commands: 0 }
       await sock.sendMessage(chatId, { text: withSignature(`📈 Stats\nTotal commands processed: ${data.commands}`, sender) })
     }
+
+    if (cmd === `${config.prefix}shutdown`) {
+      if (isSudo(config, sender)) process.exit(0)
+    }
+
+    if (cmd === `${config.prefix}restart`) {
+      if (isSudo(config, sender)) process.exit(1)
+    }
   })
 }
