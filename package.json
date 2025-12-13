@@ -7,8 +7,6 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.4.0",
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7"
+    "@whiskeysockets/baileys": "^6.4.0"
   }
 }
