@@ -1,18 +1,14 @@
 {
   "name": "dp-bot",
   "version": "1.0.0",
-  "description": "WhatsApp bot using Baileys with plugin system and watermarking",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.6.0",
-    "@hapi/boom": "^9.1.4",
-    "node-fetch": "^3.3.2",
-    "fs": "^0.0.1-security"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "@whiskeysockets/baileys": "^6.4.0",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
   }
 }
