@@ -33,7 +33,6 @@ async function startBot() {
     }
   }
 
-  // 🔄 Connection updates
   sock.ev.on("connection.update", (update) => {
     const { connection, lastDisconnect } = update;
 
