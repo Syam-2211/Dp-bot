@@ -1,10 +1,8 @@
-const send = require("../utils/send");
+import send from "../utils/send.js";
 
-module.exports = {
+export default {
   name: "alive",
-  description: "Check if bot is alive",
-  execute: async (sock, msg, args) => {
-    const from = msg.key.remoteJid;
-    await send(sock, from, { text: "✅ Bot is alive and running!" });
+  execute: async (sock, msg) => {
+    await send(sock, msg.key.remoteJid, { text: "✅ Bot is alive!" });
   }
 };
