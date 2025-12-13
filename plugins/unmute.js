@@ -1,11 +1,8 @@
-const send = require("../utils/send");
+import send from "../utils/send.js";
 
-module.exports = {
+export default {
   name: "unmute",
-  description: "Unmute the group",
-  execute: async (sock, msg, args) => {
-    const from = msg.key.remoteJid;
-    await sock.groupSettingUpdate(from, "not_announcement");
-    await send(sock, from, { text: "🔊 Group unmuted (everyone can send messages)." });
+  execute: async (sock, msg) => {
+    await send(sock, msg.key.remoteJid, { text: "🔊 Group unmuted." });
   }
 };
