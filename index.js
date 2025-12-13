@@ -24,11 +24,15 @@ async function startBot() {
 
   // Connection updates
   sock.ev.on("connection.update", (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    const { connection, lastDisconnect, pairingCode } = update;
 
-    // Show QR only if BOT_NUMBER is set and not already paired
-    if (qr && BOT_NUMBER && !sock.authState.creds?.me) {
-      console.log(`🔗 Pairing Code for ${BOT_NUMBER}:`, qr);
+    // Show pairing code only if BOT_NUMBER is set and not already paired
+    if (pairingCode && BOT_NUMBER && !sock.authState.creds?.me) {
+      console.log(`🔗 Pairing Code for ${BOT_NUMBER}: ${pairingCode}`);
+    }
+
+    if (connection === "open") {
+      console.log("✅ WhatsApp connection established");
     }
 
     if (connection === "close") {
@@ -37,12 +41,8 @@ async function startBot() {
         console.log("⚠️ Connection closed. Reconnecting...");
         startBot();
       } else {
-        console.log("🔒 Logged out. Please re-scan QR.");
+        console.log("🔒 Logged out. Please re-scan pairing code.");
       }
-    }
-
-    if (connection === "open") {
-      console.log("✅ WhatsApp connection established");
     }
   });
 
