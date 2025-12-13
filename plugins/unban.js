@@ -1,18 +1,9 @@
-const send = require("../utils/send");
+import send from "../utils/send.js";
 
-module.exports = {
+export default {
   name: "unban",
-  description: "Unban a user",
   execute: async (sock, msg, args) => {
-    const from = msg.key.remoteJid;
-    const mentioned = msg.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
-
-    if (!mentioned.length) {
-      return send(sock, from, { text: "✅ Mention a user to unban." });
-    }
-
-    const target = mentioned[0];
-    await send(sock, from, { text: `✅ ${target} has been unbanned.` });
-    // Remove from banlist logic here
+    const user = args[0];
+    await send(sock, msg.key.remoteJid, { text: `✅ User ${user} unbanned.` });
   }
 };
