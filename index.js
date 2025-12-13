@@ -1,13 +1,16 @@
-const {
-  default: makeWASocket,
+import makeWASocket, {
   useMultiFileAuthState,
   generatePairingCode,
   DisconnectReason
-} = require("@whiskeysockets/baileys");
+} from "@whiskeysockets/baileys";
 
-const fs = require("fs");
-const path = require("path");
-const send = require("./utils/send");
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import send from "./utils/send.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const BOT_WATERMARK = process.env.BOT_WATERMARK || "🕊🦋⃝♥⃝ѕиєнα🍁♥⃝🕊";
 const PREFIX = process.env.PREFIX || "!";
@@ -57,9 +60,9 @@ async function startBot() {
   fs.readdirSync(pluginDir).forEach((file) => {
     if (file.endsWith(".js")) {
       try {
-        const plugin = require(path.join(pluginDir, file));
-        plugins[plugin.name] = plugin;
-        console.log(`✅ Plugin loaded: ${plugin.name}`);
+        const plugin = await import(path.join(pluginDir, file));
+        plugins[plugin.default.name] = plugin.default;
+        console.log(`✅ Plugin loaded: ${plugin.default.name}`);
       } catch (err) {
         console.warn(`⚠️ Failed to load plugin ${file}:`, err.message);
       }
