@@ -49,9 +49,13 @@ async function startBot() {
   const pluginDir = path.join(__dirname, "plugins");
   fs.readdirSync(pluginDir).forEach((file) => {
     if (file.endsWith(".js")) {
-      const plugin = require(path.join(pluginDir, file));
-      plugins[plugin.name] = plugin;
-      console.log(`✅ Plugin loaded: ${plugin.name}`);
+      try {
+        const plugin = require(path.join(pluginDir, file));
+        plugins[plugin.name] = plugin;
+        console.log(`✅ Plugin loaded: ${plugin.name}`);
+      } catch (err) {
+        console.warn(`⚠️ Failed to load plugin ${file}:`, err.message);
+      }
     }
   });
 
@@ -73,6 +77,9 @@ async function startBot() {
     if (plugins[command]) {
       try {
         await plugins[command].execute(sock, msg, args);
+        if (plugins["logger"]) {
+          await plugins["logger"].execute(sock, msg, command);
+        }
       } catch (err) {
         console.error(`❌ Error in ${command}:`, err);
         await send(sock, msg.key.remoteJid, {
