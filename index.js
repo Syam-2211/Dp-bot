@@ -1,6 +1,7 @@
 const {
   default: makeWASocket,
   useMultiFileAuthState,
+  generatePairingCode,
   DisconnectReason
 } = require("@whiskeysockets/baileys");
 
@@ -22,14 +23,19 @@ async function startBot() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  // Connection updates
-  sock.ev.on("connection.update", (update) => {
-    const { connection, lastDisconnect, pairingCode } = update;
-
-    // Show pairing code only if BOT_NUMBER is set and not already paired
-    if (pairingCode && BOT_NUMBER && !sock.authState.creds?.me) {
-      console.log(`🔗 Pairing Code for ${BOT_NUMBER}: ${pairingCode}`);
+  // 🔐 Trigger pairing code if not already paired
+  if (!sock.authState.creds?.me && BOT_NUMBER) {
+    try {
+      const code = await generatePairingCode(sock, BOT_NUMBER);
+      console.log(`🔗 Pairing Code for ${BOT_NUMBER}: ${code}`);
+    } catch (err) {
+      console.error("❌ Failed to generate pairing code:", err.message);
     }
+  }
+
+  // 🔄 Connection updates
+  sock.ev.on("connection.update", (update) => {
+    const { connection, lastDisconnect } = update;
 
     if (connection === "open") {
       console.log("✅ WhatsApp connection established");
@@ -46,7 +52,7 @@ async function startBot() {
     }
   });
 
-  // Plugin loader
+  // 🧩 Plugin loader
   const plugins = {};
   const pluginDir = path.join(__dirname, "plugins");
   fs.readdirSync(pluginDir).forEach((file) => {
@@ -61,7 +67,7 @@ async function startBot() {
     }
   });
 
-  // Message handler
+  // 📩 Message handler
   sock.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0];
     if (!msg.message || msg.key.fromMe) return;
