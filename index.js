@@ -10,7 +10,7 @@ const send = require("./utils/send");
 
 const BOT_WATERMARK = process.env.BOT_WATERMARK || "🕊🦋⃝♥⃝ѕиєнα🍁♥⃝🕊";
 const PREFIX = process.env.PREFIX || "!";
-const BOT_NUMBER = process.env.BOT_NUMBER || null; // set in Render env vars
+const BOT_NUMBER = process.env.BOT_NUMBER || null;
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("auth");
@@ -26,7 +26,7 @@ async function startBot() {
   sock.ev.on("connection.update", (update) => {
     const { connection, lastDisconnect, qr } = update;
 
-    // Only show QR if BOT_NUMBER is set AND not already paired
+    // Show QR only if BOT_NUMBER is set and not already paired
     if (qr && BOT_NUMBER && !sock.authState.creds?.me) {
       console.log(`🔗 Pairing Code for ${BOT_NUMBER}:`, qr);
     }
