@@ -1,36 +1,53 @@
-const fs = require('fs')
-const path = require('path')
-const { withSignature } = require('../utils/signature')
+import { writeFile } from "fs";
+import { exec } from "child_process";
+import path from "path";
 
-module.exports = (sock, config, db) => {
-  sock.ev.on('messages.upsert', async ({ messages }) => {
-    const m = messages[0]
-    if (!m.message) return
-    const chatId = m.key.remoteJid
-    const body = m.message.conversation || m.message.extendedTextMessage?.text || ''
-    const cmd = body.trim().toLowerCase()
+export default {
+  name: "sticker",
+  execute: async (sock, msg, args) => {
+    try {
+      const jid = msg.key.remoteJid;
 
-    if (cmd === `${config.prefix}sticker`) {
-      const quoted = m.message.extendedTextMessage?.contextInfo?.quotedMessage
-      if (!quoted || (!quoted.imageMessage && !quoted.videoMessage)) {
-        await sock.sendMessage(chatId, { text: withSignature('⚠️ Please reply to a photo or short video with !sticker', m.key.participant || m.key.remoteJid) })
-        return
+      // Check if the message has an image
+      const imageMessage = msg.message?.imageMessage;
+      if (!imageMessage) {
+        await sock.sendMessage(jid, { text: "⚠️ Please reply with an image to convert into a sticker." });
+        return;
       }
 
-      try {
-        const buffer = await sock.downloadMediaMessage({ message: quoted })
-        const filePath = path.join(__dirname, '../downloads/sticker.webp')
-        fs.writeFileSync(filePath, buffer)
+      // Download the image
+      const buffer = await sock.downloadMediaMessage(msg);
 
-        await sock.sendMessage(chatId, {
-          sticker: { url: filePath },
-          // Sticker metadata (visible in sticker info)
-          packname: "🕊🦋⃝♥⃝ѕиєнα🍁♥⃝🦋⃝🕊",
-          author: "🤍⃞𝄟ꪶ𝐒͢ʏ᪳ᴀ͓ᴍ͎ ͢𝐒ᴇ͓ꪳʀ͎𖦻⃞🍓"
-        })
-      } catch (err) {
-        await sock.sendMessage(chatId, { text: withSignature('❌ Failed to convert media to sticker.', m.key.participant || m.key.remoteJid) })
-      }
+      // Save temporarily
+      const filePath = path.join(process.cwd(), "temp.jpg");
+      writeFile(filePath, buffer, async (err) => {
+        if (err) {
+          console.error("❌ Error saving file:", err);
+          await sock.sendMessage(jid, { text: "❌ Failed to save image." });
+          return;
+        }
+
+        // Convert to sticker using ImageMagick (make sure it's installed in Termux)
+        const stickerPath = path.join(process.cwd(), "sticker.webp");
+        exec(`magick convert ${filePath} -resize 512x512 ${stickerPath}`, async (error) => {
+          if (error) {
+            console.error("❌ Error converting to sticker:", error);
+            await sock.sendMessage(jid, { text: "❌ Failed to convert image to sticker." });
+            return;
+          }
+
+          // Send sticker back
+          await sock.sendMessage(jid, {
+            sticker: { url: stickerPath },
+          });
+
+          // Watermark reply
+          await sock.sendMessage(jid, { text: "✅ Sticker created by DP‑Bot™" });
+        });
+      });
+    } catch (err) {
+      console.error("❌ Sticker plugin error:", err);
+      await sock.sendMessage(msg.key.remoteJid, { text: `❌ Error: ${err.message}` });
     }
-  })
-}
+  },
+};
