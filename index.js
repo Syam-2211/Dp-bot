@@ -1,3 +1,12 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import makeWASocket from "@whiskeysockets/baileys";
+import send from "./utils/send.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 async function loadPlugins() {
   const plugins = {};
   const pluginDir = path.join(__dirname, "plugins");
@@ -17,3 +26,32 @@ async function loadPlugins() {
 
   return plugins;
 }
+
+async function startBot() {
+  const sock = makeWASocket();
+  const plugins = await loadPlugins();
+
+  sock.ev.on("messages.upsert", async ({ messages }) => {
+    const msg = messages[0];
+    if (!msg.message || !msg.key.remoteJid) return;
+
+    const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
+    if (!text || !text.startsWith("!")) return;
+
+    const [cmd, ...args] = text.slice(1).split(" ");
+    const plugin = plugins[cmd];
+
+    if (plugin) {
+      try {
+        await plugin.execute(sock, msg, args);
+      } catch (err) {
+        console.error(`❌ Error in plugin ${cmd}:`, err.message);
+        await send(sock, msg.key.remoteJid, { text: `❌ Error: ${err.message}` });
+      }
+    } else {
+      await send(sock, msg.key.remoteJid, { text: `❓ Unknown command: !${cmd}` });
+    }
+  });
+}
+
+startBot();
