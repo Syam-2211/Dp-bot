@@ -16,7 +16,8 @@ async function loadPlugins() {
   for (const file of files) {
     try {
       const pluginPath = path.join(pluginDir, file);
-      const plugin = await import(pluginPath);
+      // ✅ wrap import in await inside async function
+      const plugin = await import(`file://${pluginPath}`);
       plugins[plugin.default.name] = plugin.default;
       console.log(`✅ Plugin loaded: ${plugin.default.name}`);
     } catch (err) {
