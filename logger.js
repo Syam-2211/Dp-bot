@@ -1,30 +1,16 @@
-import fs from "fs";
-import path from "path";
-import { logSuccess, logWarn, logError } from "./logger.js";
-
-async function loadPlugins() {
-  const plugins = [];
-  const pluginsDir = path.join(process.cwd(), "plugins");
-
-  const files = fs.readdirSync(pluginsDir).filter(f => f.endsWith(".js"));
-
-  for (const file of files) {
-    try {
-      const pluginModule = await import(`file://${path.join(pluginsDir, file)}`);
-      const plugin = pluginModule.default;
-
-      if (plugin && plugin.name && plugin.execute) {
-        plugins.push(plugin);
-        logSuccess(`Plugin loaded: ${plugin.name}`);
-      } else {
-        logWarn(`Skipped ${file} (invalid format)`);
-      }
-    } catch (err) {
-      logError(`Failed to load ${file}`, err);
-    }
-  }
-
-  return plugins;
+export function logInfo(message) {
+  console.log(`ℹ️ INFO: ${message}`);
 }
 
-export { loadPlugins };
+export function logSuccess(message) {
+  console.log(`✅ SUCCESS: ${message}`);
+}
+
+export function logWarn(message) {
+  console.log(`⚠️ WARNING: ${message}`);
+}
+
+export function logError(message, err = null) {
+  console.error(`❌ ERROR: ${message}`);
+  if (err) console.error(err);
+}
