@@ -29,7 +29,7 @@ async function loadPlugins() {
 }
 
 async function startBot() {
-  const sock = makeWASocket();
+  const sock = makeWASocket({});
   const plugins = await loadPlugins();
 
   sock.ev.on("messages.upsert", async ({ messages }) => {
