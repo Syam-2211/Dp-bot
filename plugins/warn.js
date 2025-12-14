@@ -1,9 +1,7 @@
-import send from "../utils/send.js";
-
 export default {
   name: "warn",
   execute: async (sock, msg, args) => {
-    const user = args[0];
-    await send(sock, msg.key.remoteJid, { text: `⚠️ Warning issued to ${user}.` });
+    const jid = msg.key.remoteJid;
+    await sock.sendMessage(jid, { text: "⚠️ Warning issued by DP‑Bot™" });
   }
 };
