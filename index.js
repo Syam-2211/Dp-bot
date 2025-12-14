@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import makeWASocket from "@whiskeysockets/baileys";
+import { makeWASocket, useMultiFileAuthState } from "@whiskeysockets/baileys";
 import send from "./utils/send.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,7 +16,6 @@ async function loadPlugins() {
   for (const file of files) {
     try {
       const pluginPath = path.join(pluginDir, file);
-      // ✅ wrap import in await inside async function
       const plugin = await import(`file://${pluginPath}`);
       plugins[plugin.default.name] = plugin.default;
       console.log(`✅ Plugin loaded: ${plugin.default.name}`);
@@ -29,11 +28,14 @@ async function loadPlugins() {
 }
 
 async function startBot() {
+  const { state, saveCreds } = await useMultiFileAuthState("auth");
   const sock = makeWASocket({
-  printQRInTerminal: true,
-  syncFullHistory: false,
-  shouldSyncHistoryMessage: false,
-});
+    auth: state,
+    syncFullHistory: false,
+    shouldSyncHistoryMessage: false,
+  });
+
+  sock.ev.on("creds.update", saveCreds);
 
   const plugins = await loadPlugins();
 
